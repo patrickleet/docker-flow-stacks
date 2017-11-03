@@ -6,19 +6,24 @@ import jenkins.security.s2m.AdminWhitelistRule
 
 def instance = Jenkins.getInstance()
 
-def user = new File("/run/secrets/jenkins-user").text.trim()
-def pass = new File("/run/secrets/jenkins-pass").text.trim()
+def currentSecurityRealm = instance.getSecurityRealm()
 
-println "Creating user " + user + "..."
+if(currentSecurityRealm == SecurityRealm.NO_AUTHENTICATION)) {
+  def user = new File("/run/secrets/jenkins-user").text.trim()
+  def pass = new File("/run/secrets/jenkins-pass").text.trim()
 
-def hudsonRealm = new HudsonPrivateSecurityRealm(false)
-hudsonRealm.createAccount(user, pass)
-instance.setSecurityRealm(hudsonRealm)
+  println "Creating user " + user + "..."
 
-def strategy = new FullControlOnceLoggedInAuthorizationStrategy()
-instance.setAuthorizationStrategy(strategy)
-instance.save()
+  def hudsonRealm = new HudsonPrivateSecurityRealm(false)
+  hudsonRealm.createAccount(user, pass)
+  instance.setSecurityRealm(hudsonRealm)
 
-Jenkins.instance.getInjector().getInstance(AdminWhitelistRule.class).setMasterKillSwitch(false)
+  def strategy = new FullControlOnceLoggedInAuthorizationStrategy()
+  instance.setAuthorizationStrategy(strategy)
+  instance.save()
 
-println "User " + user + " was created"
+  Jenkins.instance.getInjector().getInstance(AdminWhitelistRule.class).setMasterKillSwitch(false)
+
+  println "User " + user + " was created"
+}
+
